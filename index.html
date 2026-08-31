@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Una nota para ti</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c20 0%, #1a102f 50%, #2b122c 100%);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --text-primary: #f3e9f8;
+            --text-secondary: #d0b8dc;
+            --accent: #e09ec5;
+            --accent-glow: rgba(224, 158, 197, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas para partículas animadas de fondo */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 650px;
+            width: 100%;
+        }
+
+        /* Pantalla inicial con botón de abrir */
+        .envelope-wrapper {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 50px 30px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            transition: transform 0.6s ease, opacity 0.6s ease;
+        }
+
+        .envelope-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.4rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .envelope-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+            font-weight: 300;
+        }
+
+        .btn-open {
+            background: linear-gradient(135deg, #d47fa6, #9b5380);
+            color: #ffffff;
+            border: none;
+            padding: 14px 38px;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: all 0.3s ease;
+        }
+
+        .btn-open:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(224, 158, 197, 0.5);
+        }
+
+        /* Contenedor de la carta */
+        .letter-card {
+            display: none;
+            opacity: 0;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 45px 40px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            transition: opacity 1s ease, transform 1s ease;
+            transform: translateY(20px);
+        }
+
+        .letter-card.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .letter-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .letter-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .letter-body p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            margin-bottom: 22px;
+            font-weight: 300;
+            text-align: justify;
+        }
+
+        .letter-footer {
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: right;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        @media (max-width: 480px) {
+            .envelope-wrapper, .letter-card {
+                padding: 30px 20px;
+            }
+            .letter-header h1 {
+                font-size: 1.8rem;
+            }
+            .letter-body p {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="container">
+        <div class="envelope-wrapper" id="envelope">
+            <h1 class="envelope-title">Para ti</h1>
+            <p class="envelope-subtitle">Una pequeña nota que no quería dejar sin enviar.</p>
+            <button class="btn-open" onclick="openLetter()">Leer carta</button>
+        </div>
+
+        <div class="letter-card" id="letter">
+            <div class="letter-header">
+                <h1>Hola, Princesa...</h1>
+            </div>
+            <div class="letter-body">
+                <p>
+                    Si estás leyendo esto, es muy posible que haya pasado algún tiempo y que nuestros caminos hayan tomado rumbos distintos. Quizás en este momento ya ni siquiera estemos hablando, pero no quería quedarme con estas palabras guardadas en el silencio.
+                </p>
+                <p>
+                    Sé que en su momento sentiste mi distancia y lamento si eso te causó alguna duda o tristeza. La verdad es que atravesé por una racha de problemas familiares bastante difíciles que me descolocaron. Además de eso, estuve concentrado y gestionando todo lo de la visa con la ilusión de poder ir a visitarte y compartir tiempo a tu lado.
+                </p>
+                <p>
+                    A veces las cosas no salen en los tiempos ni en las formas que planeamos, pero quería que supieras que mi ausencia jamás fue por falta de interés o de cariño.
+                </p>
+                <p>
+                    Independientemente de la distancia y del lugar en el que nos encontremos hoy, desde el fondo de mi corazón te deseo lo mejor siempre. Que cumplas cada meta que te propongas y que nunca pierdas esa luz tan bonita que tienes.
+                </p>
+            </div>
+            <div class="letter-footer">
+                Con mucho cariño y los mejores deseos.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animación de abrir carta
+        function openLetter() {
+            const envelope = document.getElementById('envelope');
+            const letter = document.getElementById('letter');
+
+            envelope.style.opacity = '0';
+            envelope.style.transform = 'scale(0.9)';
+
+            setTimeout(() => {
+                envelope.style.display = 'none';
+                letter.classList.add('visible');
+            }, 600);
+        }
+
+        // Partículas sutiles de fondo con HTML5 Canvas
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = Array.from({ length: 45 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 2 + 0.5,
+            alpha: Math.random() * 0.5 + 0.2,
+            speedY: Math.random() * 0.4 + 0.1
+        }));
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(224, 158, 197, ${p.alpha})`;
+                ctx.fill();
+
+                p.y -= p.speedY;
+                if (p.y < 0) {
+                    p.y = height;
+                    p.x = Math.random() * width;
+                }
+            });
+
+            requestAnimationFrame(drawParticles);
+        }
+
+        drawParticles();
+    </script>
+</body>
+</html>
